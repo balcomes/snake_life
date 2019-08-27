@@ -45,6 +45,15 @@ function love.load()
         }
         directionQueue = {'right'}
         snakeAlive = true
+
+        snakeSegments2 = {
+            {x = gridXCount - 3, y = gridYCount - 1},
+            {x = gridXCount - 2, y = gridYCount - 1},
+            {x = gridXCount - 1, y = gridYCount - 1},
+        }
+        directionQueue2 = {'left'}
+        snakeAlive2 = true
+
         timer = 0
         moveFood()
     end
@@ -112,6 +121,55 @@ function love.update(dt)
                 end
             end
 
+            if #directionQueue2 > 1 then
+                table.remove(directionQueue2, 1)
+            end
+
+            local nextXPosition2 = snakeSegments2[1].x
+            local nextYPosition2 = snakeSegments2[1].y
+
+            canMove2 = false
+            while canMove2 == false do
+
+              directionQueue2[1] = math.random(1, 4)
+
+              if directionQueue2[1] == 1 then
+                  nextXPosition2 = nextXPosition2 + 1
+                  if nextXPosition2 > gridXCount then
+                      nextXPosition2 = 1
+                  end
+              elseif directionQueue2[1] == 2 then
+                  nextXPosition2 = nextXPosition2 - 1
+                  if nextXPosition2 < 1 then
+                      nextXPosition2 = gridXCount
+                  end
+              elseif directionQueue2[1] == 3 then
+                  nextYPosition2 = nextYPosition2 + 1
+                  if nextYPosition2 > gridYCount then
+                      nextYPosition2 = 1
+                  end
+              elseif directionQueue2[1] == 4 then
+                  nextYPosition2 = nextYPosition2 - 1
+                  if nextYPosition2 < 1 then
+                      nextYPosition2 = gridYCount
+                  end
+              end
+
+              for segmentIndex, segment in ipairs(snakeSegments) do
+                  if segmentIndex ~= #snakeSegments
+                  and nextXPosition == segment.x
+                  and nextYPosition == segment.y then
+                      canMove2 = false
+                  else
+                      canMove2 = true
+                  end
+              end
+          end
+
+
+
+
+
             local canMove = true
 
             for segmentIndex, segment in ipairs(snakeSegments) do
@@ -120,11 +178,18 @@ function love.update(dt)
                 and nextYPosition == segment.y then
                     canMove = false
                 end
+            end
 
-                if grid[nextYPosition][nextXPosition] == true then
+            for segmentIndex2, segment in ipairs(snakeSegments2) do
+                if segmentIndex2 ~= #snakeSegments2
+                and nextXPosition == segment.x
+                and nextYPosition == segment.y then
                     canMove = false
                 end
+            end
 
+            if grid[nextYPosition][nextXPosition] == true then
+                canMove = false
             end
 
             if canMove then
@@ -143,6 +208,40 @@ function love.update(dt)
             else
                 snakeAlive = false
             end
+
+
+
+            local canMove2 = true
+
+            for segmentIndex2, segment in ipairs(snakeSegments2) do
+                if segmentIndex2 ~= #snakeSegments2
+                and nextXPosition2 == segment.x
+                and nextYPosition2 == segment.y then
+                    canMove2 = false
+                end
+
+                if grid[nextYPosition][nextXPosition] == true then
+                    canMove2 = false
+                end
+
+            end
+
+            if canMove2 then
+                table.insert(snakeSegments2, 1, {x = nextXPosition2, y = nextYPosition2})
+
+                if grid[nextYPosition2][nextXPosition2] == true then
+                    grid[nextYPosition2][nextXPosition2] = false
+                else
+                    table.remove(snakeSegments2)
+                end
+            else
+                snakeAlive2 = false
+            end
+
+
+
+
+
         end
     elseif timer >= 2 then
         reset()
@@ -183,6 +282,15 @@ function love.draw()
     for segmentIndex, segment in ipairs(snakeSegments) do
         if snakeAlive then
             love.graphics.setColor(.6, 1, .32)
+        else
+            love.graphics.setColor(.5, .5, .5)
+        end
+        drawCell(segment.x, segment.y)
+    end
+
+    for segmentIndex2, segment in ipairs(snakeSegments2) do
+        if snakeAlive then
+            love.graphics.setColor(.3, 8, .32)
         else
             love.graphics.setColor(.5, .5, .5)
         end
