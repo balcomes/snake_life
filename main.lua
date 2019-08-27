@@ -120,6 +120,11 @@ function love.update(dt)
                 and nextYPosition == segment.y then
                     canMove = false
                 end
+
+                if grid[nextYPosition][nextXPosition] == true then
+                    canMove = false
+                end
+
             end
 
             if canMove then
