@@ -9,6 +9,7 @@ function love.load()
     c1 = 1
     c2 = 0
     c3 = 1
+    stay_count = 0
     derp_size = 3
 
     -- Clear Conway Board
@@ -275,7 +276,7 @@ function love.update(dt)
 
             -- Derpy
 
-            if derp_size < 10 then
+            if stay_count < 30 then
                 if stay == false then
                     table.insert(snakeSegments2, 1, {x = nextXPosition2, y = nextYPosition2})
 
@@ -285,16 +286,20 @@ function love.update(dt)
                     else
                         table.remove(snakeSegments2)
                     end
+                    stay_count = 0
+                else
+                    stay_count = stay_count + 1
                 end
             else
                 snakeAlive2 = false
                 c1 = math.random()
                 c2 = math.random()
                 c3 = math.random()
-                reset2()
                 for segmentIndex2, segment in ipairs(snakeSegments2) do
                     grid[segment.y][segment.x] = true
                 end
+                stay_count = 0
+                reset2()
             end
         end
     elseif timer >= 2 then
