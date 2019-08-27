@@ -1,13 +1,12 @@
 function love.load()
+
     love.graphics.setBackgroundColor(1, 1, 1)
-
     cellSize = 12
-
     gridXCount = 67
     gridYCount = 50
     timer = 0
-
     grid = {}
+
     for y = 1, gridYCount do
         grid[y] = {}
         for x = 1, gridXCount do
@@ -128,10 +127,15 @@ function love.update(dt)
             local nextXPosition2 = snakeSegments2[1].x
             local nextYPosition2 = snakeSegments2[1].y
 
+            choices = {1,2,3,4}
+            choice = math.random(1,#choices)
+            directionQueue2[1] = choices[choice]
+
             canMove2 = false
+
             while canMove2 == false do
 
-              directionQueue2[1] = math.random(1, 4)
+              table.remove(choices, choice)
 
               if directionQueue2[1] == 1 then
                   nextXPosition2 = nextXPosition2 + 1
@@ -164,11 +168,10 @@ function love.update(dt)
                       canMove2 = true
                   end
               end
+              if choices == {} then
+                canMove2 = true
+              end
           end
-
-
-
-
 
             local canMove = true
 
@@ -181,6 +184,7 @@ function love.update(dt)
             end
 
             for segmentIndex2, segment in ipairs(snakeSegments2) do
+
                 if segmentIndex2 ~= #snakeSegments2
                 and nextXPosition == segment.x
                 and nextYPosition == segment.y then
@@ -201,7 +205,6 @@ function love.update(dt)
                         grid[segment.y][segment.x] = true
                     end
                     moveFood()
-
                 else
                     table.remove(snakeSegments)
                 end
@@ -209,11 +212,10 @@ function love.update(dt)
                 snakeAlive = false
             end
 
-
-
             local canMove2 = true
 
             for segmentIndex2, segment in ipairs(snakeSegments2) do
+
                 if segmentIndex2 ~= #snakeSegments2
                 and nextXPosition2 == segment.x
                 and nextYPosition2 == segment.y then
@@ -223,7 +225,6 @@ function love.update(dt)
                 if grid[nextYPosition][nextXPosition] == true then
                     canMove2 = false
                 end
-
             end
 
             if canMove2 then
@@ -237,11 +238,6 @@ function love.update(dt)
             else
                 snakeAlive2 = false
             end
-
-
-
-
-
         end
     elseif timer >= 2 then
         reset()
@@ -290,7 +286,7 @@ function love.draw()
 
     for segmentIndex2, segment in ipairs(snakeSegments2) do
         if snakeAlive then
-            love.graphics.setColor(.3, 8, .32)
+            love.graphics.setColor(.3, .8, .32)
         else
             love.graphics.setColor(.5, .5, .5)
         end
