@@ -6,7 +6,12 @@ function love.load()
     gridYCount = 50
     timer = 0
     grid = {}
+    c1 = 1
+    c2 = 0
+    c3 = 1
+    derp_size = 3
 
+    -- Clear Conway Board
     for y = 1, gridYCount do
         grid[y] = {}
         for x = 1, gridXCount do
@@ -14,6 +19,7 @@ function love.load()
         end
     end
 
+    -- Handle Apple Spawning
     function moveFood()
       local possibleFoodPositions = {}
 
@@ -36,6 +42,7 @@ function love.load()
       foodPosition = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
   end
 
+    -- Respawn Player
     function reset()
         snakeSegments = {
             {x = 3, y = 1},
@@ -45,6 +52,12 @@ function love.load()
         directionQueue = {'right'}
         snakeAlive = true
 
+        timer = 0
+        moveFood()
+    end
+
+    -- Respawn Derpy
+    function reset2()
         snakeSegments2 = {
             {x = gridXCount - 3, y = gridYCount - 1},
             {x = gridXCount - 2, y = gridYCount - 1},
@@ -52,23 +65,24 @@ function love.load()
         }
         directionQueue2 = {'left'}
         snakeAlive2 = true
-
-        timer = 0
-        moveFood()
+        derp_size = 3
     end
 
     reset()
-
+    reset2()
 end
 
 function love.update(dt)
     timer = timer + dt
 
     if snakeAlive then
+
+        -- Handle Frames
         local timerLimit = 0.15
         if timer >= timerLimit then
             timer = timer - timerLimit
 
+            -- Conway Rules
             local nextGrid = {}
             for y = 1, gridYCount do
                 nextGrid[y] = {}
@@ -91,6 +105,7 @@ function love.update(dt)
 
             grid = nextGrid
 
+            -- Player Movement
             if #directionQueue > 1 then
                 table.remove(directionQueue, 1)
             end
@@ -120,9 +135,12 @@ function love.update(dt)
                 end
             end
 
+            -- Derpy Movement
             if #directionQueue2 > 1 then
                 table.remove(directionQueue2, 1)
             end
+
+            stay = false
 
             local nextXPosition2 = snakeSegments2[1].x
             local nextYPosition2 = snakeSegments2[1].y
@@ -131,50 +149,90 @@ function love.update(dt)
             choice = math.random(1,#choices)
             directionQueue2[1] = choices[choice]
 
-            canMove2 = false
+            if directionQueue2[1] == 1 then
+                nextXPosition2 = nextXPosition2 + 1
 
-            while canMove2 == false do
+                if nextXPosition2 > gridXCount then
+                    nextXPosition2 = 1
+                end
 
-              table.remove(choices, choice)
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    if segmentIndex2 ~= #snakeSegments2
+                    and nextXPosition2 == segment.x
+                    and nextYPosition2 == segment.y then
+                        stay = true
+                    end
+                end
 
-              if directionQueue2[1] == 1 then
-                  nextXPosition2 = nextXPosition2 + 1
-                  if nextXPosition2 > gridXCount then
-                      nextXPosition2 = 1
-                  end
-              elseif directionQueue2[1] == 2 then
-                  nextXPosition2 = nextXPosition2 - 1
-                  if nextXPosition2 < 1 then
-                      nextXPosition2 = gridXCount
-                  end
-              elseif directionQueue2[1] == 3 then
-                  nextYPosition2 = nextYPosition2 + 1
-                  if nextYPosition2 > gridYCount then
-                      nextYPosition2 = 1
-                  end
-              elseif directionQueue2[1] == 4 then
-                  nextYPosition2 = nextYPosition2 - 1
-                  if nextYPosition2 < 1 then
-                      nextYPosition2 = gridYCount
-                  end
-              end
+                if stay == true then
+                    nextXPosition2 = snakeSegments2[1].x
+                end
+            end
 
-              for segmentIndex, segment in ipairs(snakeSegments) do
-                  if segmentIndex ~= #snakeSegments
-                  and nextXPosition == segment.x
-                  and nextYPosition == segment.y then
-                      canMove2 = false
-                  else
-                      canMove2 = true
-                  end
-              end
-              if choices == {} then
-                canMove2 = true
-              end
-          end
+            if directionQueue2[1] == 2 then
+                nextXPosition2 = nextXPosition2 - 1
 
+                if nextXPosition2 < 1 then
+                    nextXPosition2 = gridXCount
+                end
+
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    if segmentIndex2 ~= #snakeSegments2
+                    and nextXPosition2 == segment.x
+                    and nextYPosition2 == segment.y then
+                        stay = true
+                    end
+                end
+
+                if stay == true then
+                    nextXPosition2 = snakeSegments2[1].x
+                end
+            end
+
+            if directionQueue2[1] == 3 then
+                nextYPosition2 = nextYPosition2 + 1
+
+                if nextYPosition2 > gridYCount then
+                    nextYPosition2 = 1
+                end
+
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    if segmentIndex2 ~= #snakeSegments2
+                    and nextXPosition2 == segment.x
+                    and nextYPosition2 == segment.y then
+                        stay = true
+                    end
+                end
+
+                if stay == true then
+                    nextYPosition2 = snakeSegments2[1].y
+                end
+            end
+
+            if directionQueue2[1] == 4 then
+                nextYPosition2 = nextYPosition2 - 1
+
+                if nextYPosition2 < 1 then
+                    nextYPosition2 = gridYCount
+                end
+
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    if segmentIndex2 ~= #snakeSegments2
+                    and nextXPosition2 == segment.x
+                    and nextYPosition2 == segment.y then
+                        stay = true
+                    end
+                end
+
+                if stay == true then
+                    nextYPosition2 = snakeSegments2[1].y
+                end
+            end
+
+            -- Player
             local canMove = true
 
+            -- Bump Self
             for segmentIndex, segment in ipairs(snakeSegments) do
                 if segmentIndex ~= #snakeSegments
                 and nextXPosition == segment.x
@@ -183,6 +241,7 @@ function love.update(dt)
                 end
             end
 
+            -- Bump Derpy
             for segmentIndex2, segment in ipairs(snakeSegments2) do
 
                 if segmentIndex2 ~= #snakeSegments2
@@ -192,10 +251,12 @@ function love.update(dt)
                 end
             end
 
+            -- Bump Mold
             if grid[nextYPosition][nextXPosition] == true then
                 canMove = false
             end
 
+            -- Safe: Eat or Move
             if canMove then
                 table.insert(snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
 
@@ -212,31 +273,28 @@ function love.update(dt)
                 snakeAlive = false
             end
 
-            local canMove2 = true
+            -- Derpy
 
-            for segmentIndex2, segment in ipairs(snakeSegments2) do
+            if derp_size < 10 then
+                if stay == false then
+                    table.insert(snakeSegments2, 1, {x = nextXPosition2, y = nextYPosition2})
 
-                if segmentIndex2 ~= #snakeSegments2
-                and nextXPosition2 == segment.x
-                and nextYPosition2 == segment.y then
-                    canMove2 = false
-                end
-
-                if grid[nextYPosition][nextXPosition] == true then
-                    canMove2 = false
-                end
-            end
-
-            if canMove2 then
-                table.insert(snakeSegments2, 1, {x = nextXPosition2, y = nextYPosition2})
-
-                if grid[nextYPosition2][nextXPosition2] == true then
-                    grid[nextYPosition2][nextXPosition2] = false
-                else
-                    table.remove(snakeSegments2)
+                    if grid[nextYPosition2][nextXPosition2] == true then
+                        grid[nextYPosition2][nextXPosition2] = false
+                        derp_size = derp_size + 1
+                    else
+                        table.remove(snakeSegments2)
+                    end
                 end
             else
                 snakeAlive2 = false
+                c1 = math.random()
+                c2 = math.random()
+                c3 = math.random()
+                reset2()
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    grid[segment.y][segment.x] = true
+                end
             end
         end
     elseif timer >= 2 then
@@ -244,13 +302,14 @@ function love.update(dt)
     end
 end
 
+-- Grid Background
 function love.draw()
     for y = 1, 50 do
         for x = 1, 70 do
             local cellDrawSize = cellSize - 1
 
             if grid[y][x] then
-                love.graphics.setColor(1, 0, 1)
+                love.graphics.setColor(c1, c2, c3)
             else
                 love.graphics.setColor(.86, .86, .86)
             end
@@ -275,6 +334,7 @@ function love.draw()
         )
     end
 
+    -- Animate Player
     for segmentIndex, segment in ipairs(snakeSegments) do
         if snakeAlive then
             love.graphics.setColor(.6, 1, .32)
@@ -284,6 +344,7 @@ function love.draw()
         drawCell(segment.x, segment.y)
     end
 
+    -- Animate Derpy
     for segmentIndex2, segment in ipairs(snakeSegments2) do
         if snakeAlive then
             love.graphics.setColor(.3, .8, .32)
@@ -293,10 +354,12 @@ function love.draw()
         drawCell(segment.x, segment.y)
     end
 
+    -- Draw Apple
     love.graphics.setColor(1, .3, .3)
     drawCell(foodPosition.x, foodPosition.y)
 end
 
+-- Player Controls
 function love.keypressed(key)
     if key == 'right'
     and directionQueue[#directionQueue] ~= 'right'
