@@ -1,64 +1,46 @@
-local Shadows = require("shadows")
-local LightWorld = require("shadows.LightWorld")
-local Light = require("shadows.Light")
-local Body = require("shadows.Body")
-local PolygonShadow = require("shadows.ShadowShapes.PolygonShadow")
-local CircleShadow = require("shadows.ShadowShapes.CircleShadow")
-local ImageShadow = require("shadows.ShadowShapes.ImageShadow")
---local newTexture = love.graphics.newImage("water.jpg")
---local newImageShadow = ImageShadow:new(newBody, newTexture)
+--local Shadows = require("shadows")
+--local LightWorld = require("shadows.LightWorld")
+--local Light = require("shadows.Light")
+--local Body = require("shadows.Body")
+--local CircleShadow = require("shadows.ShadowShapes.CircleShadow")
+
+cellSize = 12
+c1 = 1
+c2 = 1
+c3 = 1
+gridXCount = 67
+gridYCount = 50
+timer = 0
+grid = {}
+stay_count = 0
+derp_size = 3
+level = 1
+rot = 0
+timerLimit = 0.1
 
 -- Create a light world
 --newLightWorld = LightWorld:new()
 
 -- Create a light on the light world, with radius 300
---newLight = Light:new(newLightWorld, 900)
+--mainLight = Light:new(newLightWorld, 800)
 
 -- Set the light's color to white
---newLight:SetColor(255, 255, 255, 100)
+--mainLight:SetColor(c1*255, c2*255, c3*255, 120)
 
 -- Set the light's position
---newLight:SetPosition(3, 3)
-
+--mainLight:SetPosition(gridXCount*cellSize/2, gridYCount*cellSize/2, 1)
 
 -- Create a body
---newBody = Body:new(newLightWorld)
---newTexture = love.graphics.newImage("water.jpg")
---newImageShadow = ImageShadow:new(newbody, newTexture)
+--appleBody = Body:new(newLightWorld)
 
 -- Set the body's position and rotation
---newBody:SetPosition(300, 300)
---newBody:SetAngle(-15)
-
--- Create a polygon shape on the body with the given points
---PolygonShadow:new(newBody, -12, -12, 12, -12, 12, 12, -12, 12)
+--appleBody:SetPosition(1, 1)
 
 -- Create a circle shape on the body at (-30, -30) with radius 16
---CircleShadow:new(newBody, -6, -6, 6)
-
--- Create a second body
---newBody2 = Body:new(newLightWorld)
-
--- Set the second body's position
---newBody2:SetPosition(350, 350)
-
--- Add a polygon shape to the second body
---PolygonShape:new(newBody2, -20, -20, 20, -20, 20, 20, -20, 20)
+--CircleShadow:new(appleBody, -6, -6, 6)
 
 function love.load()
     love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
-    cellSize = 12
-    gridXCount = 67
-    gridYCount = 50
-    timer = 0
-    grid = {}
-    c1 = 1
-    c2 = 0
-    c3 = 1
-    stay_count = 0
-    derp_size = 3
-    level = 1
-    rot = 0
 
     -- Clear Conway Board
     for y = 1, gridYCount do
@@ -91,7 +73,7 @@ function love.load()
       foodPosition = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
 
       -- Set the body's position and rotation
-      --newBody:SetPosition(cellSize * foodPosition.x, cellSize * foodPosition.y)
+      --appleBody:SetPosition(cellSize * foodPosition.x, cellSize * foodPosition.y)
 
   end
 
@@ -135,7 +117,6 @@ function love.update(dt)
       end
 
         -- Handle Frames
-        local timerLimit = 0.15
         if timer >= timerLimit then
             timer = timer - timerLimit
 
@@ -340,6 +321,7 @@ function love.update(dt)
                 stay_count = 0
                 reset2()
                 level = level + 1
+                timerLimit = timerLimit * 0.9
                 love.window.setTitle("Level " .. level)
                 --newLight:SetColor(math.random(1,255),
                 --math.random(1,255),
@@ -351,11 +333,12 @@ function love.update(dt)
     elseif timer >= 2 then
         reset()
         level = 1
+        timerLimit = 0.1
         love.window.setTitle("Level " .. level)
     end
 
     -- Move the light to the mouse position with altitude 1.1
-  	--newLight:SetPosition(snakeSegments[1].x * cellSize, snakeSegments[1].y * cellSize, 1.1)
+  	--mainLight:SetPosition(snakeSegments[1].x * cellSize, snakeSegments[1].y * cellSize, 1.1)
 
   	-- Recalculate the light world
   	--newLightWorld:Update()
@@ -417,8 +400,7 @@ function love.draw()
     love.graphics.setColor(1, .3, .3)
     drawCell(foodPosition.x, foodPosition.y)
 
-    -- Draw the light world with white color
-  	--newLightWorld:Draw()
+    --newLightWorld:Draw()
 
 end
 
@@ -443,5 +425,18 @@ function love.keypressed(key)
     and directionQueue[#directionQueue] ~= 'down'
     and directionQueue[#directionQueue] ~= 'up' then
         table.insert(directionQueue, 'down')
+
+    --elseif key == 'q' then
+    --    timerLimit = timerLimit + 0.005
+
+    --elseif key == 'w' then
+    --    timerLimit = timerLimit - 0.005
+
+    --elseif key == 'e' then
+    --    timerLimit = 0.15
     end
+
+
+
+
 end
