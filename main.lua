@@ -1,15 +1,9 @@
---local Shadows = require("shadows")
---local LightWorld = require("shadows.LightWorld")
---local Light = require("shadows.Light")
---local Body = require("shadows.Body")
---local CircleShadow = require("shadows.ShadowShapes.CircleShadow")
-
 cellSize = 12
+gridXCount = math.floor(love.graphics.getWidth()/cellSize + 0.5)
+gridYCount = math.floor(love.graphics.getHeight()/cellSize + 0.5)
 c1 = 1
 c2 = 1
 c3 = 1
-gridXCount = 67
-gridYCount = 50
 timer = 0
 grid = {}
 stay_count = 0
@@ -17,27 +11,6 @@ derp_size = 3
 level = 1
 rot = 0
 timerLimit = 0.1
-
--- Create a light world
---newLightWorld = LightWorld:new()
-
--- Create a light on the light world, with radius 300
---mainLight = Light:new(newLightWorld, 800)
-
--- Set the light's color to white
---mainLight:SetColor(c1*255, c2*255, c3*255, 120)
-
--- Set the light's position
---mainLight:SetPosition(gridXCount*cellSize/2, gridYCount*cellSize/2, 1)
-
--- Create a body
---appleBody = Body:new(newLightWorld)
-
--- Set the body's position and rotation
---appleBody:SetPosition(1, 1)
-
--- Create a circle shape on the body at (-30, -30) with radius 16
---CircleShadow:new(appleBody, -6, -6, 6)
 
 function love.load()
     love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
@@ -71,10 +44,6 @@ function love.load()
           end
       end
       foodPosition = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
-
-      -- Set the body's position and rotation
-      --appleBody:SetPosition(cellSize * foodPosition.x, cellSize * foodPosition.y)
-
   end
 
     -- Respawn Player
@@ -111,6 +80,7 @@ function love.update(dt)
     timer = timer + dt
     if snakeAlive then
 
+      -- Move inaccessible food eventually
       rot = rot + 1
       if rot > 5000 then
           moveFood()
@@ -295,10 +265,9 @@ function love.update(dt)
             end
 
             -- Derpy
-            if stay_count < 30 then
+            if stay_count < 60 then
                 if stay == false then
                     table.insert(snakeSegments2, 1, {x = nextXPosition2, y = nextYPosition2})
-
                     if grid[nextYPosition2][nextXPosition2] == true then
                         grid[nextYPosition2][nextXPosition2] = false
                         derp_size = derp_size + 1
@@ -310,25 +279,21 @@ function love.update(dt)
                     stay_count = stay_count + 1
                 end
             else
+
                 -- Derpy Explodes
                 snakeAlive2 = false
                 c1 = math.random()
                 c2 = math.random()
                 c3 = math.random()
-                for segmentIndex2, segment in ipairs(snakeSegments2) do
-                    grid[segment.y][segment.x] = true
-                end
                 stay_count = 0
-                reset2()
                 level = level + 1
                 timerLimit = timerLimit * 0.9
                 love.window.setTitle("Level " .. level)
-                --newLight:SetColor(math.random(1,255),
-                --math.random(1,255),
-                --math.random(1,255),
-                --math.random(50,120))
+                for segmentIndex2, segment in ipairs(snakeSegments2) do
+                    grid[segment.y][segment.x] = true
+                end
+                reset2()
             end
-
         end
     elseif timer >= 2 then
         reset()
@@ -336,20 +301,12 @@ function love.update(dt)
         timerLimit = 0.1
         love.window.setTitle("Level " .. level)
     end
-
-    -- Move the light to the mouse position with altitude 1.1
-  	--mainLight:SetPosition(snakeSegments[1].x * cellSize, snakeSegments[1].y * cellSize, 1.1)
-
-  	-- Recalculate the light world
-  	--newLightWorld:Update()
-
-
 end
 
 -- Grid Background
 function love.draw()
-    for y = 1, 50 do
-        for x = 1, 70 do
+    for y = 1, gridYCount do
+        for x = 1, gridXCount do
             local cellDrawSize = cellSize - 1
             if grid[y][x] then
                 love.graphics.setColor(c1, c2, c3)
@@ -389,7 +346,11 @@ function love.draw()
     -- Animate Derpy
     for segmentIndex2, segment in ipairs(snakeSegments2) do
         if snakeAlive then
-            love.graphics.setColor(.3, .6, .5)
+            if stay_count > 30 then
+                love.graphics.setColor(math.random(),math.random(),math.random())
+            else
+                love.graphics.setColor(.3, .6, .5)
+            end
         else
             love.graphics.setColor(.5, .5, .5)
         end
@@ -399,9 +360,6 @@ function love.draw()
     -- Draw Apple
     love.graphics.setColor(1, .3, .3)
     drawCell(foodPosition.x, foodPosition.y)
-
-    --newLightWorld:Draw()
-
 end
 
 -- Player Controls
@@ -435,8 +393,4 @@ function love.keypressed(key)
     --elseif key == 'e' then
     --    timerLimit = 0.15
     end
-
-
-
-
 end
