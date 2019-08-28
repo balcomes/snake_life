@@ -10,10 +10,11 @@ stay_count = 0
 derp_size = 3
 level = 1
 rot = 0
+rot_limit = 5000
 timerLimit = 0.1
 
 function love.load()
-    love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
+
 
     -- Clear Conway Board
     for y = 1, gridYCount do
@@ -78,11 +79,15 @@ end
 
 function love.update(dt)
     timer = timer + dt
+    love.graphics.setBackgroundColor(
+    25/255,
+    30/255,
+    35/255)
     if snakeAlive then
 
       -- Move inaccessible food eventually
       rot = rot + 1
-      if rot > 5000 then
+      if rot > rot_limit then
           moveFood()
       end
 
@@ -288,6 +293,7 @@ function love.update(dt)
                 stay_count = 0
                 level = level + 1
                 timerLimit = timerLimit * 0.9
+                rot_limit = rot_limit * 0.8
                 love.window.setTitle("Level " .. level)
                 for segmentIndex2, segment in ipairs(snakeSegments2) do
                     grid[segment.y][segment.x] = true
@@ -299,6 +305,7 @@ function love.update(dt)
         reset()
         level = 1
         timerLimit = 0.1
+        rot_limit = 5000
         love.window.setTitle("Level " .. level)
     end
 end
@@ -311,7 +318,10 @@ function love.draw()
             if grid[y][x] then
                 love.graphics.setColor(c1, c2, c3)
             else
-                love.graphics.setColor(35/255, 40/255, 45/255)
+                love.graphics.setColor(
+                35/255,
+                40/255,
+                45/255)
             end
             love.graphics.rectangle(
                 'fill',
