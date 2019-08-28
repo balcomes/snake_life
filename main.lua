@@ -11,6 +11,8 @@ function love.load()
     c3 = 1
     stay_count = 0
     derp_size = 3
+    level = 1
+    rot = 0
 
     -- Clear Conway Board
     for y = 1, gridYCount do
@@ -22,6 +24,7 @@ function love.load()
 
     -- Handle Apple Spawning
     function moveFood()
+      rot = 0
       local possibleFoodPositions = {}
       for foodX = 1, gridXCount do
           for foodY = 1, gridYCount do
@@ -30,6 +33,9 @@ function love.load()
                   if foodX == segment.x and foodY == segment.y then
                       possible = false
                   end
+              end
+              if grid[foodY][foodX] then
+                  possible = false
               end
               if possible then
                   table.insert(possibleFoodPositions, {x = foodX, y = foodY})
@@ -72,6 +78,11 @@ end
 function love.update(dt)
     timer = timer + dt
     if snakeAlive then
+
+      rot = rot + 1
+      if rot > 5000 then
+          moveFood()
+      end
 
         -- Handle Frames
         local timerLimit = 0.15
@@ -278,11 +289,15 @@ function love.update(dt)
                 end
                 stay_count = 0
                 reset2()
+                level = level + 1
+                love.window.setTitle("Level " .. level)
             end
 
         end
     elseif timer >= 2 then
         reset()
+        level = 1
+        love.window.setTitle("Level " .. level)
     end
 end
 
