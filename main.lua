@@ -1,5 +1,51 @@
-function love.load()
+local Shadows = require("shadows")
+local LightWorld = require("shadows.LightWorld")
+local Light = require("shadows.Light")
+local Body = require("shadows.Body")
+local PolygonShadow = require("shadows.ShadowShapes.PolygonShadow")
+local CircleShadow = require("shadows.ShadowShapes.CircleShadow")
+local ImageShadow = require("shadows.ShadowShapes.ImageShadow")
+--local newTexture = love.graphics.newImage("water.jpg")
+--local newImageShadow = ImageShadow:new(newBody, newTexture)
 
+-- Create a light world
+--newLightWorld = LightWorld:new()
+
+-- Create a light on the light world, with radius 300
+--newLight = Light:new(newLightWorld, 900)
+
+-- Set the light's color to white
+--newLight:SetColor(255, 255, 255, 100)
+
+-- Set the light's position
+--newLight:SetPosition(3, 3)
+
+
+-- Create a body
+--newBody = Body:new(newLightWorld)
+--newTexture = love.graphics.newImage("water.jpg")
+--newImageShadow = ImageShadow:new(newbody, newTexture)
+
+-- Set the body's position and rotation
+--newBody:SetPosition(300, 300)
+--newBody:SetAngle(-15)
+
+-- Create a polygon shape on the body with the given points
+--PolygonShadow:new(newBody, -12, -12, 12, -12, 12, 12, -12, 12)
+
+-- Create a circle shape on the body at (-30, -30) with radius 16
+--CircleShadow:new(newBody, -6, -6, 6)
+
+-- Create a second body
+--newBody2 = Body:new(newLightWorld)
+
+-- Set the second body's position
+--newBody2:SetPosition(350, 350)
+
+-- Add a polygon shape to the second body
+--PolygonShape:new(newBody2, -20, -20, 20, -20, 20, 20, -20, 20)
+
+function love.load()
     love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
     cellSize = 12
     gridXCount = 67
@@ -43,6 +89,10 @@ function love.load()
           end
       end
       foodPosition = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
+
+      -- Set the body's position and rotation
+      --newBody:SetPosition(cellSize * foodPosition.x, cellSize * foodPosition.y)
+
   end
 
     -- Respawn Player
@@ -291,6 +341,10 @@ function love.update(dt)
                 reset2()
                 level = level + 1
                 love.window.setTitle("Level " .. level)
+                --newLight:SetColor(math.random(1,255),
+                --math.random(1,255),
+                --math.random(1,255),
+                --math.random(50,120))
             end
 
         end
@@ -299,6 +353,14 @@ function love.update(dt)
         level = 1
         love.window.setTitle("Level " .. level)
     end
+
+    -- Move the light to the mouse position with altitude 1.1
+  	--newLight:SetPosition(snakeSegments[1].x * cellSize, snakeSegments[1].y * cellSize, 1.1)
+
+  	-- Recalculate the light world
+  	--newLightWorld:Update()
+
+
 end
 
 -- Grid Background
@@ -354,6 +416,10 @@ function love.draw()
     -- Draw Apple
     love.graphics.setColor(1, .3, .3)
     drawCell(foodPosition.x, foodPosition.y)
+
+    -- Draw the light world with white color
+  	--newLightWorld:Draw()
+
 end
 
 -- Player Controls
