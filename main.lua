@@ -84,6 +84,9 @@ end
 -- Apple Decomposing
 function Apple:Decompose()
     self.rot = self.rot + 1
+    self.c1 = 1 - self.rot/self.rot_limit/3
+    self.c2 = self.rot/self.rot_limit/2
+    self.c3 = self.rot/self.rot_limit/2
 end
 
 -- Derpy Class
@@ -100,6 +103,7 @@ function Derpy:Create(xo,yo)
         directionQueue = {'left'},
         snakeAlive = true,
         stay_count = 1,
+        alive = true,
         name = baby_key,
         c1 = (snakeSegments[1].x/gridXCount),
         c2 = .5 + math.random()/2,
@@ -210,19 +214,7 @@ function Derpy:Move()
     end
 
     -- Derpy Ratking?
-    if self.stay_count < 60 then
-        if stay == false then
-            table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
-            if grid[nextYPosition][nextXPosition] == true then
-                grid[nextYPosition][nextXPosition] = false
-            else
-                table.remove(self.snakeSegments)
-            end
-            self.stay_count = 1
-        else
-            self.stay_count = self.stay_count + 1
-        end
-    else
+    if self.stay_count > 60 then
         -- Derpy Explodes
         self.snakeAlive = false
         c1 = math.random()
@@ -238,7 +230,19 @@ function Derpy:Move()
         end
         table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
         table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
-        table.insert(dead_babies, self.name)
+        self.alive = false
+    else
+        if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
+            table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
+            if grid[nextYPosition][nextXPosition] == true then
+                grid[nextYPosition][nextXPosition] = false
+            else
+                table.remove(self.snakeSegments)
+            end
+            self.stay_count = 1
+        else
+            self.stay_count = self.stay_count + 1
+        end
     end
 end
 
@@ -376,14 +380,7 @@ function love.update(dt)
 
             -- Derpy Brood Move
             for ind,i in ipairs(brood) do
-                dead = false
-                for jnd,j in ipairs(dead_babies) do
-                    if j == ind then
-                        dead = true
-                    end
-                end
-                if dead == false then
-                    ------------ 216 386 need to fix when lots on board
+                if i.snakeSegments[1].x ~= nil and i.snakeSegments[1].y ~= nil then
                     i:Move()
                 end
             end
@@ -397,6 +394,11 @@ function love.update(dt)
                 barrel[#barrel]:Move()
             end
 
+            for ind,i in ipairs(brood) do
+                if i.alive == false then
+                    table.remove(brood, ind)
+                end
+            end
         end
 
     elseif timer >= 2 then
@@ -431,15 +433,7 @@ function love.draw()
 
     -- Animate Derpy Brood
     for ind,i in ipairs(brood) do
-        dead = false
-        for jnd,j in ipairs(dead_babies) do
-            if j == ind then
-                dead = true
-            end
-        end
-        if dead == false then
-            i:Animate()
-        end
+        i:Animate()
     end
 
     -- Animate Player
