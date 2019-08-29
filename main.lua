@@ -210,8 +210,9 @@ function love.load()
         if self.stay_count > 60 then
             -- Derpy Explodes
             self.alive = false
+            -- Change Mold setColor
             c1 = math.random()
-            c2 = math.random()
+            c2 = math.random()/2
             c3 = math.random()
             self.stay_count = 0
             level = level + 1
