@@ -1,252 +1,243 @@
-cellSize = 12
-c1 = 1
-c2 = 1
-c3 = 1
-timer = 0
-grid = {}
-level = 1
-rot = 0
-rot_limit = 5000
-timerLimit = 0.1
+function love.load()
 
-gridXCount = math.floor(love.graphics.getWidth()/cellSize + 0.5)
-gridYCount = math.floor(love.graphics.getHeight()/cellSize + 0.5)
-love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
+    cellSize = 12
+    c1 = 1
+    c2 = 1
+    c3 = 1
+    timer = 0
+    grid = {}
+    level = 1
+    rot = 0
+    rot_limit = 5000
+    timerLimit = 0.1
 
-brood = {}
-barrel = {}
-baby_key = 1
-dead_babies = {}
-apple_key = 1
-eaten_apples = {}
+    gridXCount = math.floor(love.graphics.getWidth()/cellSize + 0.5)
+    gridYCount = math.floor(love.graphics.getHeight()/cellSize + 0.5)
+    love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
 
--- Cell Drawing Function
-function drawCell(x, y)
-    love.graphics.rectangle(
-        'fill',
-        (x - 1) * cellSize,
-        (y - 1) * cellSize,
-        cellSize - 1,
-        cellSize - 1
-    )
-end
+    brood = {}
+    barrel = {}
 
--- Apple Class
-Apple = {}
-Apple.__index = Apple
-function Apple:Create()
-    local this =
-    {
-        rot = 0,
-        rot_limit = math.floor(100*math.random() + 100/level),
-        c1 = 1,
-        c2 = rot/rot_limit,
-        c3 = 0,
-        x = nil,
-        y =nil,
-    }
-    apple_key = apple_key + 1
-    setmetatable(this, Apple)
-    return this
-end
+    -- Cell Drawing Function
+    function drawCell(x, y)
+        love.graphics.rectangle(
+            'fill',
+            (x - 1) * cellSize,
+            (y - 1) * cellSize,
+            cellSize - 1,
+            cellSize - 1
+        )
+    end
 
--- Apple Spawning
-function Apple:Move()
-    local possibleFoodPositions = {}
-    for foodX = 1, gridXCount do
-        for foodY = 1, gridYCount do
-            local possible = true
-            for segmentIndex, segment in ipairs(snakeSegments) do
-                if foodX == segment.x and foodY == segment.y then
+    -- Apple Class
+    Apple = {}
+    Apple.__index = Apple
+    function Apple:Create()
+        local this =
+        {
+            rot = 0,
+            rot_limit = math.floor(100 * math.random() + 100 / level),
+            c1 = 1,
+            c2 = 0,
+            c3 = 0,
+            x = nil,
+            y = nil,
+        }
+        setmetatable(this, Apple)
+        return this
+    end
+
+    -- Apple Spawning
+    function Apple:Move()
+        local possibleFoodPositions = {}
+        for foodX = 1, gridXCount do
+            for foodY = 1, gridYCount do
+                local possible = true
+                for segmentIndex, segment in ipairs(snakeSegments) do
+                    if foodX == segment.x and foodY == segment.y then
+                        possible = false
+                    end
+                end
+                if grid[foodY][foodX] then
                     possible = false
                 end
-            end
-            if grid[foodY][foodX] then
-                possible = false
-            end
-            if possible then
-                table.insert(possibleFoodPositions, {x = foodX, y = foodY})
+                if possible then
+                    table.insert(possibleFoodPositions, {x = foodX, y = foodY})
+                end
             end
         end
+        pos = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
+        self.x = pos.x
+        self.y = pos.y
     end
-    pos = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
-    self.x = pos.x
-    self.y = pos.y
-end
 
--- Apple Animation
-function Apple:Animate()
     -- Draw Apple
-    love.graphics.setColor(self.c1, self.c2, self.c3)
-    drawCell(self.x,self.y)
-end
+    function Apple:Animate()
+        love.graphics.setColor(self.c1, self.c2, self.c3)
+        drawCell(self.x,self.y)
+    end
 
--- Apple Decomposing
-function Apple:Decompose()
-    self.rot = self.rot + 1
-    self.c1 = 1 - self.rot/self.rot_limit/3
-    self.c2 = self.rot/self.rot_limit/2
-    self.c3 = self.rot/self.rot_limit/2
-end
+    -- Apple Decomposing
+    function Apple:Decompose()
+        self.rot = self.rot + 1
+        self.c1 = 1 - self.rot/self.rot_limit/3
+        self.c2 = self.rot/self.rot_limit/2
+        self.c3 = self.rot/self.rot_limit/2
+    end
 
--- Derpy Class
-Derpy = {}
-Derpy.__index = Derpy
-function Derpy:Create(xo,yo)
-    local this =
-    {
-        snakeSegments = {
-            {x = xo - 3, y = yo - 1},
-            {x = xo - 2, y = yo - 1},
-            {x = xo - 1, y = yo - 1},
-        },
-        directionQueue = {'left'},
-        snakeAlive = true,
-        stay_count = 1,
-        alive = true,
-        name = baby_key,
-        c1 = (snakeSegments[1].x/gridXCount),
-        c2 = .5 + math.random()/2,
-        c3 = (snakeSegments[1].y/gridYCount),
-    }
-    baby_key = baby_key + 1
-    setmetatable(this, Derpy)
-    return this
-end
+    -- Derpy Class
+    Derpy = {}
+    Derpy.__index = Derpy
+    function Derpy:Create(xo,yo)
+        local this =
+        {
+            snakeSegments = {
+                {x = xo - 3, y = yo - 1},
+                {x = xo - 2, y = yo - 1},
+                {x = xo - 1, y = yo - 1},
+            },
+            directionQueue = {'left'},
+            stay_count = 1,
+            alive = true,
+            c1 = (snakeSegments[1].x/gridXCount),
+            c2 = .5 + math.random()/2,
+            c3 = (snakeSegments[1].y/gridYCount),
+        }
+        setmetatable(this, Derpy)
+        return this
+    end
 
--- Animate Derpy
-function Derpy:Animate()
-    for segmentIndex, segment in ipairs(self.snakeSegments) do
-        if snakeAlive then
-            if self.stay_count > 30 then
-                love.graphics.setColor(math.random(),math.random(),math.random())
+    -- Animate Derpy
+    function Derpy:Animate()
+        for segmentIndex, segment in ipairs(self.snakeSegments) do
+            if playerAlive then
+                if self.stay_count > 30 then
+                    love.graphics.setColor(math.random(),math.random(),math.random())
+                else
+                    love.graphics.setColor(self.c1, self.c2, self.c3)
+                end
             else
-                love.graphics.setColor(self.c1, self.c2, self.c3)
+                love.graphics.setColor(.5, .5, .5)
             end
+            drawCell(segment.x, segment.y)
+        end
+    end
+
+    -- Derpy Movement
+    function Derpy:Move()
+        if #self.directionQueue > 1 then
+            table.remove(self.directionQueue, 1)
+        end
+
+        local stay = false
+
+        local nextXPosition = self.snakeSegments[1].x
+        local nextYPosition = self.snakeSegments[1].y
+
+        choices = {1,2,3,4}
+        choice = math.random(1,#choices)
+        self.directionQueue[1] = choices[choice]
+
+        if self.directionQueue[1] == 1 then
+            nextXPosition = nextXPosition + 1
+            if nextXPosition > gridXCount then
+                nextXPosition = 1
+            end
+            for segmentIndex, segment in ipairs(self.snakeSegments) do
+                if segmentIndex ~= #self.snakeSegments
+                and nextXPosition == segment.x
+                and nextYPosition == segment.y then
+                    stay = true
+                end
+            end
+            if stay == true then
+                nextXPosition = self.snakeSegments[1].x
+            end
+        end
+
+        if self.directionQueue[1] == 2 then
+            nextXPosition = nextXPosition - 1
+            if nextXPosition < 1 then
+                nextXPosition = gridXCount
+            end
+            for segmentIndex, segment in ipairs(self.snakeSegments) do
+                if segmentIndex ~= #self.snakeSegments
+                and nextXPosition == segment.x
+                and nextYPosition == segment.y then
+                    stay = true
+                end
+            end
+            if stay == true then
+                nextXPosition = self.snakeSegments[1].x
+            end
+        end
+
+        if self.directionQueue[1] == 3 then
+            nextYPosition = nextYPosition + 1
+            if nextYPosition > gridYCount then
+                nextYPosition = 1
+            end
+            for segmentIndex, segment in ipairs(self.snakeSegments) do
+                if segmentIndex ~= #self.snakeSegments
+                and nextXPosition == segment.x
+                and nextYPosition == segment.y then
+                    stay = true
+                end
+            end
+            if stay == true then
+                nextYPosition = self.snakeSegments[1].y
+            end
+        end
+
+        if self.directionQueue[1] == 4 then
+            nextYPosition = nextYPosition - 1
+            if nextYPosition < 1 then
+                nextYPosition = gridYCount
+            end
+            for segmentIndex, segment in ipairs(self.snakeSegments) do
+                if segmentIndex ~= #self.snakeSegments
+                and nextXPosition == segment.x
+                and nextYPosition == segment.y then
+                    stay = true
+                end
+            end
+            if stay == true then
+                nextYPosition = self.snakeSegments[1].y
+            end
+        end
+
+        -- Derpy Ratking?
+        if self.stay_count > 60 then
+            -- Derpy Explodes
+            self.alive = false
+            c1 = math.random()
+            c2 = math.random()
+            c3 = math.random()
+            self.stay_count = 0
+            level = level + 1
+            timerLimit = timerLimit * 0.98
+            rot_limit = rot_limit * 0.98
+            love.window.setTitle("Level " .. level)
+            for segmentIndex, segment in ipairs(self.snakeSegments) do
+                grid[segment.y][segment.x] = true
+            end
+            table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
+            table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
+            self.alive = false
         else
-            love.graphics.setColor(.5, .5, .5)
-        end
-        drawCell(segment.x, segment.y)
-    end
-end
-
--- Derpy Movement
-function Derpy:Move()
-    if #self.directionQueue > 1 then
-        table.remove(self.directionQueue, 1)
-    end
-
-    local stay = false
-
-    local nextXPosition = self.snakeSegments[1].x
-    local nextYPosition = self.snakeSegments[1].y
-
-    choices = {1,2,3,4}
-    choice = math.random(1,#choices)
-    self.directionQueue[1] = choices[choice]
-
-    if self.directionQueue[1] == 1 then
-        nextXPosition = nextXPosition + 1
-        if nextXPosition > gridXCount then
-            nextXPosition = 1
-        end
-        for segmentIndex, segment in ipairs(self.snakeSegments) do
-            if segmentIndex ~= #self.snakeSegments
-            and nextXPosition == segment.x
-            and nextYPosition == segment.y then
-                stay = true
-            end
-        end
-        if stay == true then
-            nextXPosition = self.snakeSegments[1].x
-        end
-    end
-
-    if self.directionQueue[1] == 2 then
-        nextXPosition = nextXPosition - 1
-        if nextXPosition < 1 then
-            nextXPosition = gridXCount
-        end
-        for segmentIndex, segment in ipairs(self.snakeSegments) do
-            if segmentIndex ~= #self.snakeSegments
-            and nextXPosition == segment.x
-            and nextYPosition == segment.y then
-                stay = true
-            end
-        end
-        if stay == true then
-            nextXPosition = self.snakeSegments[1].x
-        end
-    end
-
-    if self.directionQueue[1] == 3 then
-        nextYPosition = nextYPosition + 1
-        if nextYPosition > gridYCount then
-            nextYPosition = 1
-        end
-        for segmentIndex, segment in ipairs(self.snakeSegments) do
-            if segmentIndex ~= #self.snakeSegments
-            and nextXPosition == segment.x
-            and nextYPosition == segment.y then
-                stay = true
-            end
-        end
-        if stay == true then
-            nextYPosition = self.snakeSegments[1].y
-        end
-    end
-
-    if self.directionQueue[1] == 4 then
-        nextYPosition = nextYPosition - 1
-        if nextYPosition < 1 then
-            nextYPosition = gridYCount
-        end
-        for segmentIndex, segment in ipairs(self.snakeSegments) do
-            if segmentIndex ~= #self.snakeSegments
-            and nextXPosition == segment.x
-            and nextYPosition == segment.y then
-                stay = true
-            end
-        end
-        if stay == true then
-            nextYPosition = self.snakeSegments[1].y
-        end
-    end
-
-    -- Derpy Ratking?
-    if self.stay_count > 60 then
-        -- Derpy Explodes
-        self.snakeAlive = false
-        c1 = math.random()
-        c2 = math.random()
-        c3 = math.random()
-        self.stay_count = 0
-        level = level + 1
-        timerLimit = timerLimit * 0.95
-        rot_limit = rot_limit * 0.90
-        love.window.setTitle("Level " .. level)
-        for segmentIndex, segment in ipairs(self.snakeSegments) do
-            grid[segment.y][segment.x] = true
-        end
-        table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
-        table.insert(brood, Derpy:Create(self.snakeSegments[1].x,self.snakeSegments[1].y))
-        self.alive = false
-    else
-        if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
-            table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
-            if grid[nextYPosition][nextXPosition] == true then
-                grid[nextYPosition][nextXPosition] = false
+            if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
+                table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
+                if grid[nextYPosition][nextXPosition] == true then
+                    grid[nextYPosition][nextXPosition] = false
+                else
+                    table.remove(self.snakeSegments)
+                end
+                self.stay_count = 1
             else
-                table.remove(self.snakeSegments)
+                self.stay_count = self.stay_count + 1
             end
-            self.stay_count = 1
-        else
-            self.stay_count = self.stay_count + 1
         end
     end
-end
-
-function love.load()
 
     -- Clear Conway Board
     for y = 1, gridYCount do
@@ -264,7 +255,7 @@ function love.load()
             {x = 1, y = 1},
         }
         directionQueue = {'right'}
-        snakeAlive = true
+        playerAlive = true
         timer = 0
     end
 
@@ -279,7 +270,7 @@ function love.update(dt)
 
     timer = timer + dt
 
-    if snakeAlive then
+    if playerAlive then
 
         -- Handle Frames
         if timer >= timerLimit then
@@ -375,12 +366,14 @@ function love.update(dt)
                     table.remove(snakeSegments)
                 end
             else
-                snakeAlive = false
+                playerAlive = false
             end
 
             -- Derpy Brood Move
             for ind,i in ipairs(brood) do
-                if i.snakeSegments[1].x ~= nil and i.snakeSegments[1].y ~= nil then
+                if i.alive == false then
+                    table.remove(brood, ind)
+                else
                     i:Move()
                 end
             end
@@ -392,12 +385,6 @@ function love.update(dt)
                 table.remove(barrel, #barrel)
                 table.insert(barrel, Apple:Create())
                 barrel[#barrel]:Move()
-            end
-
-            for ind,i in ipairs(brood) do
-                if i.alive == false then
-                    table.remove(brood, ind)
-                end
             end
         end
 
@@ -438,7 +425,7 @@ function love.draw()
 
     -- Animate Player
     for segmentIndex, segment in ipairs(snakeSegments) do
-        if snakeAlive then
+        if playerAlive then
             love.graphics.setColor(.6, .9, .3)
         else
             love.graphics.setColor(.5, .5, .5)
@@ -448,15 +435,7 @@ function love.draw()
 
     -- Animate Apples
     for ind,i in ipairs(barrel) do
-        rotten = false
-        for jnd,j in ipairs(eaten_apples) do
-            if j == ind then
-                rotten = true
-            end
-        end
-        if rotten == false then
             i:Animate()
-        end
     end
 end
 
