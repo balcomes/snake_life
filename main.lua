@@ -1,15 +1,16 @@
 function love.load()
 
     cellSize = 12
-    c1 = 1
-    c2 = 1
-    c3 = 1
+    c1 = math.random()/2
+    c2 = math.random()/2
+    c3 = math.random()
     timer = 0
     grid = {}
     level = 1
     rot = 0
     rot_limit = 5000
     timerLimit = 0.1
+    bumpblink = 0
 
     gridXCount = math.floor(love.graphics.getWidth()/cellSize + 0.5)
     gridYCount = math.floor(love.graphics.getHeight()/cellSize + 0.5)
@@ -211,7 +212,7 @@ function love.load()
             -- Derpy Explodes
             self.alive = false
             -- Change Mold setColor
-            c1 = math.random()
+            c1 = math.random()/2
             c2 = math.random()/2
             c3 = math.random()
             self.stay_count = 0
@@ -228,10 +229,12 @@ function love.load()
         else
             if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
                 table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
-                if grid[nextYPosition][nextXPosition] == true then
-                    grid[nextYPosition][nextXPosition] = false
-                else
-                    table.remove(self.snakeSegments)
+                if nextXPosition ~= nil and nextYPosition ~= nil then
+                    if grid[nextYPosition][nextXPosition] == true then
+                        grid[nextYPosition][nextXPosition] = false
+                    else
+                        table.remove(self.snakeSegments)
+                    end
                 end
                 self.stay_count = 1
             else
@@ -270,6 +273,7 @@ end
 function love.update(dt)
 
     timer = timer + dt
+    bumpblink = bumpblink - dt
 
     if playerAlive then
 
@@ -338,12 +342,16 @@ function love.update(dt)
                 and nextXPosition == segment.x
                 and nextYPosition == segment.y then
                     canMove = false
+                    bumpblink = 3
+                    table.remove(snakeSegments)
                 end
             end
 
             -- Bump Mold
             if grid[nextYPosition][nextXPosition] == true then
                 canMove = false
+                bumpblink = .5
+                table.remove(snakeSegments)
             end
 
             -- Safe: Eat or Move
@@ -366,14 +374,17 @@ function love.update(dt)
                 if ate == false then
                     table.remove(snakeSegments)
                 end
+            elseif #snakeSegments > 3 then
+                grid[nextYPosition][nextXPosition] = false
             else
                 playerAlive = false
+                bumpblink = 0
             end
 
             -- Derpy Brood Move
-            for ind,i in ipairs(brood) do
+            for k,i in pairs(brood) do
                 if i.alive == false then
-                    table.remove(brood, ind)
+                    brood[k] = nil
                 else
                     i:Move()
                 end
@@ -420,14 +431,18 @@ function love.draw()
     end
 
     -- Animate Derpy Brood
-    for ind,i in ipairs(brood) do
+    for k,i in pairs(brood) do
         i:Animate()
     end
 
     -- Animate Player
     for segmentIndex, segment in ipairs(snakeSegments) do
         if playerAlive then
-            love.graphics.setColor(.6, .9, .3)
+            if bumpblink > 0 then
+                love.graphics.setColor(math.random(), math.random(), math.random())
+            else
+                love.graphics.setColor(.6, .9, .3)
+            end
         else
             love.graphics.setColor(.5, .5, .5)
         end
