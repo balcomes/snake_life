@@ -4,17 +4,23 @@ c2 = 1
 c3 = 1
 timer = 0
 grid = {}
-brood = {}
 level = 1
 rot = 0
 rot_limit = 5000
 timerLimit = 0.1
+
 gridXCount = math.floor(love.graphics.getWidth()/cellSize + 0.5)
 gridYCount = math.floor(love.graphics.getHeight()/cellSize + 0.5)
 love.graphics.setBackgroundColor(25/255, 30/255, 35/255)
+
+brood = {}
+barrel = {}
 baby_key = 1
 dead_babies = {}
+apple_key = 1
+eaten_apples = {}
 
+-- Cell Drawing Function
 function drawCell(x, y)
     love.graphics.rectangle(
         'fill',
@@ -23,6 +29,61 @@ function drawCell(x, y)
         cellSize - 1,
         cellSize - 1
     )
+end
+
+-- Apple Class
+Apple = {}
+Apple.__index = Apple
+function Apple:Create()
+    local this =
+    {
+        rot = 0,
+        rot_limit = math.floor(100*math.random() + 100/level),
+        c1 = 1,
+        c2 = rot/rot_limit,
+        c3 = 0,
+        x = nil,
+        y =nil,
+    }
+    apple_key = apple_key + 1
+    setmetatable(this, Apple)
+    return this
+end
+
+-- Apple Spawning
+function Apple:Move()
+    local possibleFoodPositions = {}
+    for foodX = 1, gridXCount do
+        for foodY = 1, gridYCount do
+            local possible = true
+            for segmentIndex, segment in ipairs(snakeSegments) do
+                if foodX == segment.x and foodY == segment.y then
+                    possible = false
+                end
+            end
+            if grid[foodY][foodX] then
+                possible = false
+            end
+            if possible then
+                table.insert(possibleFoodPositions, {x = foodX, y = foodY})
+            end
+        end
+    end
+    pos = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
+    self.x = pos.x
+    self.y = pos.y
+end
+
+-- Apple Animation
+function Apple:Animate()
+    -- Draw Apple
+    love.graphics.setColor(self.c1, self.c2, self.c3)
+    drawCell(self.x,self.y)
+end
+
+-- Apple Decomposing
+function Apple:Decompose()
+    self.rot = self.rot + 1
 end
 
 -- Derpy Class
@@ -71,7 +132,7 @@ function Derpy:Move()
         table.remove(self.directionQueue, 1)
     end
 
-    stay = false
+    local stay = false
 
     local nextXPosition = self.snakeSegments[1].x
     local nextYPosition = self.snakeSegments[1].y
@@ -148,7 +209,7 @@ function Derpy:Move()
         end
     end
 
-    -- Derpy
+    -- Derpy Ratking?
     if self.stay_count < 60 then
         if stay == false then
             table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
@@ -157,7 +218,7 @@ function Derpy:Move()
             else
                 table.remove(self.snakeSegments)
             end
-            self.stay_count = 0
+            self.stay_count = 1
         else
             self.stay_count = self.stay_count + 1
         end
@@ -169,8 +230,8 @@ function Derpy:Move()
         c3 = math.random()
         self.stay_count = 0
         level = level + 1
-        timerLimit = timerLimit * 0.9
-        rot_limit = rot_limit * 0.8
+        timerLimit = timerLimit * 0.95
+        rot_limit = rot_limit * 0.90
         love.window.setTitle("Level " .. level)
         for segmentIndex, segment in ipairs(self.snakeSegments) do
             grid[segment.y][segment.x] = true
@@ -183,40 +244,12 @@ end
 
 function love.load()
 
-
-
-
-
-
     -- Clear Conway Board
     for y = 1, gridYCount do
         grid[y] = {}
         for x = 1, gridXCount do
             grid[y][x] = false
         end
-    end
-
-    -- Handle Apple Spawning
-    function moveFood()
-        rot = 0
-        local possibleFoodPositions = {}
-        for foodX = 1, gridXCount do
-            for foodY = 1, gridYCount do
-                local possible = true
-                for segmentIndex, segment in ipairs(snakeSegments) do
-                    if foodX == segment.x and foodY == segment.y then
-                        possible = false
-                    end
-                end
-                if grid[foodY][foodX] then
-                    possible = false
-                end
-                if possible then
-                    table.insert(possibleFoodPositions, {x = foodX, y = foodY})
-                end
-            end
-        end
-        foodPosition = possibleFoodPositions[love.math.random(1, #possibleFoodPositions)]
     end
 
     -- Respawn Player
@@ -229,11 +262,12 @@ function love.load()
         directionQueue = {'right'}
         snakeAlive = true
         timer = 0
-        moveFood()
     end
 
     -- First Reset
     reset()
+    table.insert(barrel, Apple:Create())
+    barrel[1]:Move()
     table.insert(brood, Derpy:Create(gridXCount,gridYCount))
 end
 
@@ -248,12 +282,6 @@ function love.update(dt)
 
             -- Handle Game Speed
             timer = timer - timerLimit
-
-            -- Move inaccessible food eventually
-            rot = rot + 1
-            if rot > rot_limit then
-              moveFood()
-            end
 
             -- Conway Rules
             local nextGrid = {}
@@ -317,17 +345,6 @@ function love.update(dt)
                 end
             end
 
-            --[[
-            -- Bump Derpy
-            for segmentIndex2, segment in ipairs(snakeSegments2) do
-                if segmentIndex2 ~= #snakeSegments2
-                and nextXPosition == segment.x
-                and nextYPosition == segment.y then
-                    canMove = false
-                end
-            end
-            ]]--
-
             -- Bump Mold
             if grid[nextYPosition][nextXPosition] == true then
                 canMove = false
@@ -335,22 +352,29 @@ function love.update(dt)
 
             -- Safe: Eat or Move
             if canMove then
+                local ate = false
                 table.insert(snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
-                if snakeSegments[1].x == foodPosition.x
-                and snakeSegments[1].y == foodPosition.y then
-                    for segmentIndex, segment in ipairs(snakeSegments) do
-                        grid[segment.y][segment.x] = true
+
+                for ind, i in ipairs(barrel) do
+                    if snakeSegments[1].x == i.x
+                    and snakeSegments[1].y == i.y then
+                        for segmentIndex, segment in ipairs(snakeSegments) do
+                            grid[segment.y][segment.x] = true
+                        end
+                        table.remove(barrel, #barrel)
+                        table.insert(barrel, Apple:Create())
+                        barrel[#barrel]:Move()
+                        ate = true
                     end
-                    moveFood()
-                else
+                end
+                if ate == false then
                     table.remove(snakeSegments)
                 end
             else
                 snakeAlive = false
             end
 
-
-
+            -- Derpy Brood Move
             for ind,i in ipairs(brood) do
                 dead = false
                 for jnd,j in ipairs(dead_babies) do
@@ -359,9 +383,20 @@ function love.update(dt)
                     end
                 end
                 if dead == false then
+                    ------------ 216 386 need to fix when lots on board
                     i:Move()
                 end
             end
+
+            -- Rotting
+            if barrel[#barrel].rot < barrel[#barrel].rot_limit then
+                barrel[#barrel]:Decompose()
+            else
+                table.remove(barrel, #barrel)
+                table.insert(barrel, Apple:Create())
+                barrel[#barrel]:Move()
+            end
+
         end
 
     elseif timer >= 2 then
@@ -394,16 +429,7 @@ function love.draw()
         end
     end
 
-    -- Animate Player
-    for segmentIndex, segment in ipairs(snakeSegments) do
-        if snakeAlive then
-            love.graphics.setColor(.6, .9, .3)
-        else
-            love.graphics.setColor(.5, .5, .5)
-        end
-        drawCell(segment.x, segment.y)
-    end
-
+    -- Animate Derpy Brood
     for ind,i in ipairs(brood) do
         dead = false
         for jnd,j in ipairs(dead_babies) do
@@ -416,9 +442,28 @@ function love.draw()
         end
     end
 
-    -- Draw Apple
-    love.graphics.setColor(1, .3, .3)
-    drawCell(foodPosition.x, foodPosition.y)
+    -- Animate Player
+    for segmentIndex, segment in ipairs(snakeSegments) do
+        if snakeAlive then
+            love.graphics.setColor(.6, .9, .3)
+        else
+            love.graphics.setColor(.5, .5, .5)
+        end
+        drawCell(segment.x, segment.y)
+    end
+
+    -- Animate Apples
+    for ind,i in ipairs(barrel) do
+        rotten = false
+        for jnd,j in ipairs(eaten_apples) do
+            if j == ind then
+                rotten = true
+            end
+        end
+        if rotten == false then
+            i:Animate()
+        end
+    end
 end
 
 -- Player Controls
