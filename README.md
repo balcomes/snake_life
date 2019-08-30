@@ -1,5 +1,9 @@
 # snake_life
 
+Get Love2D:
+
+https://love2d.org/
+
 Build Love file:
 
 zip -9 -r snake_life.love main.lua conf.lua;open -n -a love snake_life.lov
