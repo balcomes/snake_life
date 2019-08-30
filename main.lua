@@ -301,8 +301,7 @@ function love.load()
     reset()
     table.insert(barrel, Apple:Create())
     barrel[#barrel]:Move()
-    local temp = Derpy:Create(gridXCount,gridYCount)
-    brood[temp.name] = temp
+    table.insert(brood,Derpy:Create(gridXCount,gridYCount))
 end
 
 function love.update(dt)
@@ -504,11 +503,23 @@ function love.keypressed(key)
     and directionQueue[#directionQueue] ~= 'down'
     and directionQueue[#directionQueue] ~= 'up' then
         table.insert(directionQueue, 'down')
-    --elseif key == 'q' then
-    --    timerLimit = timerLimit + 0.005
-    --elseif key == 'w' then
-    --    timerLimit = timerLimit - 0.005
-    --elseif key == 'e' then
-    --    timerLimit = 0.15
+    elseif key == 'q' then
+        timerLimit = timerLimit + 0.005
+    elseif key == 'w' then
+        timerLimit = timerLimit - 0.005
+    elseif key == 'e' then
+        timerLimit = 0.1
+    elseif key == 'z' then
+        for k,v in pairs(brood) do
+            for segmentIndex, segment in ipairs(v.snakeSegments) do
+                grid[segment.y][segment.x] = true
+            end
+        end
+        level = 1
+        timerLimit = timerLimit * 0.98
+        rot_limit = rot_limit * 0.98
+        love.window.setTitle("Cheater!...  Level " .. level)
+        brood = {}
+        table.insert(brood,Derpy:Create(gridXCount,gridYCount))
     end
 end
