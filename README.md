@@ -1,4 +1,4 @@
-# snake_life
+# Snake Life
 
 Get Love2D:
 
