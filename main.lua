@@ -7,8 +7,6 @@ function love.load()
     timer = 0
     grid = {}
     level = 1
-    rot = 0
-    rot_limit = 5000
     timerLimit = 0.1
     bumpblink = 0
 
@@ -253,7 +251,6 @@ function love.load()
             c3 = math.random()
             level = level + 1
             timerLimit = timerLimit * 0.98
-            rot_limit = rot_limit * 0.98
             love.window.setTitle("Level " .. level)
             for segmentIndex, segment in ipairs(self.snakeSegments) do
                 grid[segment.y][segment.x] = true
@@ -434,7 +431,6 @@ function love.update(dt)
         reset()
         level = 1
         timerLimit = 0.1
-        rot_limit = 5000
         love.window.setTitle("Level " .. level)
     end
 end
@@ -517,7 +513,6 @@ function love.keypressed(key)
         end
         level = 1
         timerLimit = timerLimit * 0.98
-        rot_limit = rot_limit * 0.98
         love.window.setTitle("Cheater!...  Level " .. level)
         brood = {}
         table.insert(brood,Derpy:Create(gridXCount,gridYCount))
