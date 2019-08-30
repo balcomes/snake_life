@@ -18,9 +18,8 @@ function love.load()
 
     brood = {}
     barrel = {}
-    cache = {}
 
-
+    -- Maybe need random names in future
     function RandomVariable(length)
     	local res = ""
     	for i = 1, length do
@@ -28,8 +27,6 @@ function love.load()
     	end
     	return res
     end
-
-
 
     -- Cell Drawing Function
     function drawCell(x, y)
@@ -119,7 +116,6 @@ function love.load()
             c3 = (snakeSegments[1].y/gridYCount),
         }
         setmetatable(this, Derpy)
-        cache[self] = self
         return this
     end
 
@@ -222,44 +218,36 @@ function love.load()
                 end
             end
 
-
             if pcall(function() local a = grid[nextYPosition][nextXPosition] end) then
              --do this as the table was valid
 
+                if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
+                    table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
 
-
-
-            if stay == false and nextXPosition ~= nil and nextYPosition ~= nil then
-                table.insert(self.snakeSegments, 1, {x = nextXPosition, y = nextYPosition})
-
-
-
-                if nextXPosition ~= nil and nextYPosition ~= nil then
-                    if grid[nextYPosition][nextXPosition] == true then
-                        grid[nextYPosition][nextXPosition] = false
-                    else
-                        table.remove(self.snakeSegments)
+                    if nextXPosition ~= nil and nextYPosition ~= nil then
+                        if grid[nextYPosition][nextXPosition] == true then
+                            grid[nextYPosition][nextXPosition] = false
+                        else
+                            table.remove(self.snakeSegments)
+                        end
                     end
+                    self.stay_count = 0
+                else
+                    self.stay_count = self.stay_count + 1
                 end
-                self.stay_count = 0
-            else
-                self.stay_count = self.stay_count + 1
-            end
 
             else
                 love.window.setTitle("Error")
             end
-
-
         end
 
-        if self.stay_count > 50 then
+        if self.stay_count > 40 then
             self.unstuck = false
             self.stay_count = self.stay_count + 1
         end
 
         -- Derpy Explodes, Change Mold Color, +Level, Spawn Babies, Speedup
-        if self.stay_count > 100 and self.unstuck == false then
+        if self.stay_count > 80 and self.unstuck == false then
             c1 = math.random()/2
             c2 = math.random()/2
             c3 = math.random()
